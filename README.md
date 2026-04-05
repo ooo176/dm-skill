@@ -75,28 +75,65 @@ python3 {ROOT}/scripts/dm_query.py --file ./query.sql --max-rows 500
 python3 {ROOT}/scripts/dm_query.py --validate-only --sql "SELECT 1 FROM DUAL"
 ```
 
-## 接入 Cursor
+## Claude Code Skill
 
-1. **放置目录**：把整个 `dm-skill` 仓库（或复制后的文件夹）放进 Cursor 的 skills 目录，使 **`SKILL.md` 与 `scripts/` 在同一层**，即该 skill 的根目录下直接可见 `SKILL.md`。
-   - **个人（全局）**：`~/.cursor/skills/<任意目录名>/`（Windows：`%USERPROFILE%\.cursor\skills\<任意目录名>\`）
-   - **仅当前项目**：`<你的项目>/.cursor/skills/<任意目录名>/`
-2. **依赖与连接**：Agent 执行脚本时用的是**集成终端**里的环境，请在该终端（或 shell 配置）里已能成功 `pip install` **dmPython**，并导出 [连接配置](#连接配置) 中的 `DM_*` 变量（或 `DM_DSN`）。若为 **ARM 架构**，请阅上文 [CPU 架构](#cpu-架构arm-与-dmpython)；连库查询需 x86_64 或改用 JDBC。
-3. **使用方式**：在对话里提到「达梦 / DM / 只读查询」等，Agent 会按 `SKILL.md` 用 `Read` 读说明、用终端运行 `python3 .../scripts/dm_query.py`。若 Agent 找不到脚本，把本仓库绝对路径写进对话或项目规则中即可。
+仓库克隆到 **`.claude/skills/`** 下后，目录内应直接可见 **`SKILL.md`**（与 `scripts/` 同级）。以下命令默认使用本仓库地址；若你使用 fork，请把 URL 换成自己的。
 
-## 接入 Claude Code
+### 个人（全局）安装
 
-1. **放置目录**：同样保持仓库结构不变，**skill 根目录** = 含有 `SKILL.md` 的那一层（与 `scripts/` 同级）。将这一层目录放到 Claude Code 要求的 skills 位置（以你当前 Claude Code 版本的文档为准：个人目录或项目内 `.claude` / skills 约定）。
-2. **环境变量 `CLAUDE_SKILL_DIR`（推荐）**：指向上述 **skill 根目录**，这样在说明或脚本里可统一写：
-   ```bash
-   python3 "${CLAUDE_SKILL_DIR}/scripts/dm_query.py" --sql "SELECT * FROM DUAL"
-   ```
-   Windows PowerShell 示例：
-   ```powershell
-   $env:CLAUDE_SKILL_DIR = "D:\path\to\dm-skill"
-   python "$env:CLAUDE_SKILL_DIR\scripts\dm_query.py" --sql "SELECT * FROM DUAL"
-   ```
-3. **依赖与连接**：在 Claude Code 执行命令的终端环境中安装 **dmPython**，并配置与上文相同的 `DM_USER` / `DM_PASSWORD` / `DM_HOST` / `DM_PORT` / `DM_SCHEMA`（或 `DM_DSN`）。**ARM 环境**下连库规则见 [CPU 架构](#cpu-架构arm-与-dmpython)。
-4. **与 SKILL.md 的对应关系**：`SKILL.md` 里声明的 `allowed-tools`（如 `Read`、`Bash`）需与 Claude Code 侧实际可用的工具一致；执行查询即通过终端调用 `dm_query.py`。
+```bash
+mkdir -p ~/.claude/skills
+git clone https://github.com/ooo176/dm-skill.git ~/.claude/skills/dm-skill
+```
+
+### 项目内安装
+
+在目标项目根目录执行：
+
+```bash
+mkdir -p .claude/skills
+git clone https://github.com/ooo176/dm-skill.git .claude/skills/dm-skill
+```
+
+**重启 Claude Code** 后，Skill 会自动加载。
+
+安装完成后，在运行查询的终端里安装依赖并配置 [连接配置](#连接配置)（`pip install -r .../requirements.txt`、导出 `DM_DSN` 或 `DM_USER` 等）。**ARM 架构**下 dmPython 连库限制见 [CPU 架构](#cpu-架构arm-与-dmpython)。
+
+可选：设置环境变量 **`CLAUDE_SKILL_DIR`** 指向 Skill 根目录（例如 `~/.claude/skills/dm-skill`），便于统一书写脚本路径：
+
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/dm_query.py" --sql "SELECT * FROM DUAL"
+```
+
+---
+
+## Cursor Skill
+
+将本仓库放到 **`.cursor/skills/`** 下，保证 **`SKILL.md` 位于该 Skill 目录的根一级**（与 `scripts/` 同级）。
+
+### 个人（全局）安装
+
+```bash
+mkdir -p ~/.cursor/skills
+git clone https://github.com/ooo176/dm-skill.git ~/.cursor/skills/dm-skill
+```
+
+（Windows：可将 `~` 换为 `%USERPROFILE%`，路径形如 `%USERPROFILE%\.cursor\skills\dm-skill`。）
+
+### 项目内安装
+
+在目标项目根目录执行：
+
+```bash
+mkdir -p .cursor/skills
+git clone https://github.com/ooo176/dm-skill.git .cursor/skills/dm-skill
+```
+
+**重启 Cursor**（或执行「Developer: Reload Window」）后，Agent 即可按 Skills 规则加载；若未生效，请在 Cursor 设置中确认 Skills 目录与文档版本一致。
+
+依赖与达梦连接：在 **集成终端** 中完成 `pip install` 与 [连接配置](#连接配置）。**ARM 架构**说明见 [CPU 架构](#cpu-架构arm-与-dmpython)。
+
+对话中提及「达梦 / DM / 只读查询」等时，Agent 会按 `SKILL.md` 调用说明与 `scripts/dm_query.py`。
 
 ## SQL 规则摘要
 
