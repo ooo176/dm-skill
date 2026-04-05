@@ -90,7 +90,7 @@ def _connect():
             json.dumps(
                 {
                     "ok": False,
-                    "error": "请设置环境变量 DM_DSN 或 DM_USER + DM_PASSWORD（可选 DM_HOST DM_PORT）",
+                    "error": "请设置环境变量 DM_DSN 或 DM_USER + DM_PASSWORD（可选 DM_HOST、DM_PORT、DM_DATABASE 或 DM_SCHEMA）",
                 },
                 ensure_ascii=False,
             ),
@@ -104,7 +104,7 @@ def _connect():
         "server": server,
         "port": port,
     }
-    schema = os.environ.get("DM_SCHEMA")
+    schema = os.environ.get("DM_SCHEMA") or os.environ.get("DM_DATABASE")
     if schema:
         kwargs["schema"] = schema
     return dmPython.connect(**kwargs)
