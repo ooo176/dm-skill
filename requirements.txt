@@ -1,0 +1,2 @@
+# 达梦 Python 驱动（版本需与 DM 服务器匹配；无法 pip 时从官方安装包安装 whl）
+dmPython>=2.5.0
