@@ -69,16 +69,28 @@ python3 {ROOT}/scripts/dm_query.py --file ./query.sql --max-rows 500
 python3 {ROOT}/scripts/dm_query.py --validate-only --sql "SELECT 1 FROM DUAL"
 ```
 
-## 作为 Cursor Skill 安装
+## 接入 Cursor
 
-将本仓库（或复制后的目录）放到个人或项目 skills 目录，并保证 **`SKILL.md` 位于该 skill 目录的根一级**，例如：
+1. **放置目录**：把整个 `dm-skill` 仓库（或复制后的文件夹）放进 Cursor 的 skills 目录，使 **`SKILL.md` 与 `scripts/` 在同一层**，即该 skill 的根目录下直接可见 `SKILL.md`。
+   - **个人（全局）**：`~/.cursor/skills/<任意目录名>/`（Windows：`%USERPROFILE%\.cursor\skills\<任意目录名>\`）
+   - **仅当前项目**：`<你的项目>/.cursor/skills/<任意目录名>/`
+2. **依赖与连接**：Agent 执行脚本时用的是**集成终端**里的环境，请在该终端（或 shell 配置）里已能成功 `pip install` **dmPython**，并导出 [连接配置](#连接配置) 中的 `DM_*` 变量（或 `DM_DSN`）。
+3. **使用方式**：在对话里提到「达梦 / DM / 只读查询」等，Agent 会按 `SKILL.md` 用 `Read` 读说明、用终端运行 `python3 .../scripts/dm_query.py`。若 Agent 找不到脚本，把本仓库绝对路径写进对话或项目规则中即可。
 
-- 个人：`~/.cursor/skills/dm-database-readonly/SKILL.md`
-- 项目：`<repo>/.cursor/skills/dm-database-readonly/SKILL.md`
+## 接入 Claude Code
 
-安装后，在对话中提到「达梦 / DM / 只读查询」等，Agent 可按 `SKILL.md` 调用 `scripts/dm_query.py`。
-
-若使用 Claude Code 且已设置 `CLAUDE_SKILL_DIR`，路径可写为 `"${CLAUDE_SKILL_DIR}/scripts/dm_query.py"`（以你的实际目录名为准）。
+1. **放置目录**：同样保持仓库结构不变，**skill 根目录** = 含有 `SKILL.md` 的那一层（与 `scripts/` 同级）。将这一层目录放到 Claude Code 要求的 skills 位置（以你当前 Claude Code 版本的文档为准：个人目录或项目内 `.claude` / skills 约定）。
+2. **环境变量 `CLAUDE_SKILL_DIR`（推荐）**：指向上述 **skill 根目录**，这样在说明或脚本里可统一写：
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/scripts/dm_query.py" --sql "SELECT * FROM DUAL"
+   ```
+   Windows PowerShell 示例：
+   ```powershell
+   $env:CLAUDE_SKILL_DIR = "D:\path\to\dm-skill"
+   python "$env:CLAUDE_SKILL_DIR\scripts\dm_query.py" --sql "SELECT * FROM DUAL"
+   ```
+3. **依赖与连接**：在 Claude Code 执行命令的终端环境中安装 **dmPython**，并配置与上文相同的 `DM_USER` / `DM_PASSWORD` / `DM_HOST` / `DM_PORT` / `DM_SCHEMA`（或 `DM_DSN`）。
+4. **与 SKILL.md 的对应关系**：`SKILL.md` 里声明的 `allowed-tools`（如 `Read`、`Bash`）需与 Claude Code 侧实际可用的工具一致；执行查询即通过终端调用 `dm_query.py`。
 
 ## SQL 规则摘要
 
