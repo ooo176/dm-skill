@@ -26,6 +26,12 @@ dm-skill/
 - Python 3.9+（建议与运行 Agent 终端一致）
 - [dmPython](https://pypi.org/project/dmpython/)（版本尽量与 DM 服务器匹配；无法 `pip` 安装时，请使用达梦官方安装包中的 whl）
 
+### CPU 架构（ARM 与 dmPython）
+
+**ARM / AArch64（如 Apple Silicon、鲲鹏、飞腾等）上，本仓库的 Python 脚本暂不支持连接数据库**：达梦 **dmPython** 目前无官方 ARM 预编译包，`dm_query.py` 在检测到 ARM 时会拒绝连库（退出码 `2`），并提示改用 x86_64/amd64 环境或使用 **达梦 JDBC** 等 Java 客户端在 ARM 上访问。
+
+**仍可在 ARM 上使用** `python3 scripts/dm_query.py --validate-only ...` 做 SQL 规则校验（不加载 dmPython、不连库）。
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -74,7 +80,7 @@ python3 {ROOT}/scripts/dm_query.py --validate-only --sql "SELECT 1 FROM DUAL"
 1. **放置目录**：把整个 `dm-skill` 仓库（或复制后的文件夹）放进 Cursor 的 skills 目录，使 **`SKILL.md` 与 `scripts/` 在同一层**，即该 skill 的根目录下直接可见 `SKILL.md`。
    - **个人（全局）**：`~/.cursor/skills/<任意目录名>/`（Windows：`%USERPROFILE%\.cursor\skills\<任意目录名>\`）
    - **仅当前项目**：`<你的项目>/.cursor/skills/<任意目录名>/`
-2. **依赖与连接**：Agent 执行脚本时用的是**集成终端**里的环境，请在该终端（或 shell 配置）里已能成功 `pip install` **dmPython**，并导出 [连接配置](#连接配置) 中的 `DM_*` 变量（或 `DM_DSN`）。
+2. **依赖与连接**：Agent 执行脚本时用的是**集成终端**里的环境，请在该终端（或 shell 配置）里已能成功 `pip install` **dmPython**，并导出 [连接配置](#连接配置) 中的 `DM_*` 变量（或 `DM_DSN`）。若为 **ARM 架构**，请阅上文 [CPU 架构](#cpu-架构arm-与-dmpython)；连库查询需 x86_64 或改用 JDBC。
 3. **使用方式**：在对话里提到「达梦 / DM / 只读查询」等，Agent 会按 `SKILL.md` 用 `Read` 读说明、用终端运行 `python3 .../scripts/dm_query.py`。若 Agent 找不到脚本，把本仓库绝对路径写进对话或项目规则中即可。
 
 ## 接入 Claude Code
@@ -89,7 +95,7 @@ python3 {ROOT}/scripts/dm_query.py --validate-only --sql "SELECT 1 FROM DUAL"
    $env:CLAUDE_SKILL_DIR = "D:\path\to\dm-skill"
    python "$env:CLAUDE_SKILL_DIR\scripts\dm_query.py" --sql "SELECT * FROM DUAL"
    ```
-3. **依赖与连接**：在 Claude Code 执行命令的终端环境中安装 **dmPython**，并配置与上文相同的 `DM_USER` / `DM_PASSWORD` / `DM_HOST` / `DM_PORT` / `DM_SCHEMA`（或 `DM_DSN`）。
+3. **依赖与连接**：在 Claude Code 执行命令的终端环境中安装 **dmPython**，并配置与上文相同的 `DM_USER` / `DM_PASSWORD` / `DM_HOST` / `DM_PORT` / `DM_SCHEMA`（或 `DM_DSN`）。**ARM 环境**下连库规则见 [CPU 架构](#cpu-架构arm-与-dmpython)。
 4. **与 SKILL.md 的对应关系**：`SKILL.md` 里声明的 `allowed-tools`（如 `Read`、`Bash`）需与 Claude Code 侧实际可用的工具一致；执行查询即通过终端调用 `dm_query.py`。
 
 ## SQL 规则摘要

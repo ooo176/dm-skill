@@ -8,9 +8,39 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import re
 import sys
 from typing import Any
+
+
+def _is_arm_architecture() -> bool:
+    """当前进程所在机器是否为 ARM/AArch64（dmPython 暂无官方 ARM 包时，连库查询不可用）。"""
+    machine = (platform.machine() or "").lower()
+    processor = (platform.processor() or "").lower()
+    if "aarch64" in machine or "aarch64" in processor:
+        return True
+    if "arm64" in machine or "arm64" in processor:
+        return True
+    if machine.startswith("arm") or "armv" in machine:
+        return True
+    return False
+
+
+def _exit_arm_no_dmpython() -> None:
+    print(
+        json.dumps(
+            {
+                "ok": False,
+                "error": "当前为 ARM 架构，暂不支持通过本脚本的 dmPython 连接达梦（官方未提供对应 ARM 的 dmPython 包）。"
+                "请改用 x86_64/amd64 环境，或使用达梦 JDBC 等 Java 客户端在 ARM 上查询；仅校验 SQL 仍可使用 --validate-only。",
+                "machine": platform.machine() or "",
+            },
+            ensure_ascii=False,
+        ),
+        file=sys.stderr,
+    )
+    sys.exit(2)
 
 
 def _strip_sql_comments(sql: str) -> str:
@@ -127,6 +157,8 @@ def _rows_to_json(
 
 def run_query(sql: str, max_rows: int) -> dict[str, Any]:
     validated = validate_readonly_sql(sql)
+    if _is_arm_architecture():
+        _exit_arm_no_dmpython()
     conn = _connect()
     try:
         cur = conn.cursor()

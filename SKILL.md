@@ -42,7 +42,7 @@ allowed-tools: Read, Bash
 
 | 任务 | 做法 |
 |------|------|
-| 执行只读 SQL | `Bash` → `python3` 运行本 Skill 内脚本（见下） |
+| 执行只读 SQL | `Bash` → `python3` 运行本 Skill 内脚本（见下；**ARM 上 dmPython 连库不可用**，见「架构说明」） |
 | 查看 Skill 说明或示例 | `Read` → 打开本仓库 `SKILL.md` 或 `reference.md` |
 
 **脚本路径**（将 `{SKILL_ROOT}` 换成本仓库 `dm-skill` 的根目录，即包含 `SKILL.md` 的目录）：
@@ -113,6 +113,15 @@ pip install "dmPython>=2.5.0" -i https://mirrors.aliyun.com/pypi/simple/
 
 若经镜像仍无法安装 **dmPython**，从达梦安装介质中安装与服务器版本匹配的 whl（以官方文档为准）。
 
+### 架构说明（ARM / AArch64）
+
+当前 **dmPython 无官方 ARM 预编译包**。在 **ARM 架构**（如 Apple Silicon、aarch64、arm64）上：
+
+- **连库查询**（不带 `--validate-only`）：`dm_query.py` 会**拒绝执行**并退出码 `2`，请改用 **x86_64/amd64** 环境运行本脚本，或使用 **达梦 JDBC** 等 Java 方式在 ARM 上访问数据库。
+- **仅校验 SQL**（`--validate-only`）：仍可用，不依赖 dmPython。
+
+详见仓库 [README.md](README.md) 中的「CPU 架构」说明。
+
 ---
 
 ## Agent 执行流程
@@ -127,6 +136,7 @@ pip install "dmPython>=2.5.0" -i https://mirrors.aliyun.com/pypi/simple/
    ```bash
    python3 {SKILL_ROOT}/scripts/dm_query.py --sql "..." --max-rows 500
    ```
+   若检测到 **ARM 且无法连库**，说明原因并引导用户使用 x86_64 或 JDBC（见上文「架构说明」）。
 5. **解读结果**：脚本 stdout 为 **JSON**（`ok`、`columns`、`rows`、`row_count`、`truncated` 等）。向用户总结关键结论；大行集说明已截断并可缩小条件或提高 `DM_MAX_ROWS`（注意内存与性能）。
 
 ---
